@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HbA1c · GlucoTrack</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<script src="{% static 'js/store.js'  %}"></script>
+<script src="{%  static 'js/hba1c.js'  %}'"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">GlucoTrack</span>
+    </div>
+    <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
+      Menu
+    </button>
+    <ul class="nav-list" id="nav-list">
+      <li><a href="{% url 'home_page' %}">Dashboard</a></li>
+      <li><a href="{% url 'log' %}">Log a reading</a></li>
+      <li><a href="{% url 'medications' %}">Medications</a></li>
+      <li><a href="{% url 'hba1c' %}" class="active">HbA1c</a></li>
+      <li><a href="{% url 'guidance' %}">Guidance</a></li>
+      {% if request.user.is_anonymous %}
+      <li><a href="{% url 'login' %}">Login</a></li>
+      <li><a href="{% url 'register' %}">Join our family</a></li>
+      {% endif %}
+      {% if request.user.is_authenticated %}
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <main class="main">
+    <div class="main-inner">
+
+      <div class="page-head">
+        <h1>HbA1c</h1>
+        <p>HbA1c reflects your average blood sugar over the past two to three months. Keep your lab results here, and see an estimate calculated from your day-to-day readings in between tests.</p>
+      </div>
+
+      <div class="split">
+        <section class="card">
+          <h2>Estimated from your readings</h2>
+          <p style="margin-bottom:14px;">Calculated from the readings you've logged, using the standard relationship between average glucose and HbA1c. Treat this as a between-tests indicator, not a replacement for a lab result.</p>
+
+          <select id="est-range" style="width:auto; margin-bottom:16px;">
+            <option value="30">Last 30 days</option>
+            <option value="90" selected>Last 90 days</option>
+          </select>
+
+          <div style="display:flex; align-items:baseline; gap:10px;">
+            <div style="font-family:var(--font-display); font-size:3rem;" id="est-value">—</div>
+            <div style="color:var(--ink-faint);" id="est-caption"></div>
+          </div>
+          <p id="est-note" class="hint" style="margin-top:10px;"></p>
+        </section>
+
+        <section class="card">
+          <h2>Add a lab result</h2>
+          <form id="a1c-form" method="post">
+            {% csrf_token %}
+            <div class="field">
+              <label for="a1c-date">Test date</label>
+              <input type="date" id="a1c-date" name="date" required>
+            </div>
+            <div class="field">
+              <label for="a1c-value">HbA1c result</label>
+              <input type="number" id="a1c-value" name="result" step="0.1" min="3" max="20" placeholder="e.g. 6.8" required>
+              <div class="hint">as a percentage</div>
+            </div>
+            <div class="field">
+              <label for="a1c-notes">Notes (optional)</label>
+              <textarea id="a1c-notes" name="notes" placeholder="Lab name, fasting status, anything else"></textarea>
+            </div>
+            <div class="actions">
+              <button type="submit" class="btn">Save result</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <section class="card" style="margin-top:22px;">
+        <h2>HbA1c over time</h2>
+        <canvas id="a1c-chart" height="90"></canvas>
+        <p id="a1c-empty" class="empty-state" style="display:none; margin-top:14px;">
+          <strong>No lab results yet</strong>
+          Add your most recent HbA1c test to start the chart.
+        </p>
+      </section>
+
+      <section class="card" style="margin-top:22px;">
+        <h2>Lab history</h2>
+        <div class="entry-list" id="a1c-list">
+          {% for result in hba1c %}
+            <div style="display:flex; justify-content:space-between; align-items:baseline; gap:14px; padding:13px 0; border-bottom:1px solid var(--line);">
+              <div style="font-size:.92rem; color:var(--ink-soft); flex-shrink:0;">{{ result.test_date|date:"M j, Y" }}</div>
+              <div class="val" style="flex-shrink:0;">{{ result.result }}<span class="unit">%</span></div>
+              <div class="notes" style="flex:1; text-align:right;">{{ result.notes }}</div>
+            </div>
+          {% empty %}
+            <p class="empty-state" style="margin-top:14px;">
+              <strong>No lab results yet</strong>
+              Add your first result using the form above.
+            </p>
+          {% endfor %}
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+  <script>
+    document.getElementById('menu-toggle')?.addEventListener('click', function () {
+      var list = document.getElementById('nav-list');
+      var open = list.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+    });
+  </script>
+</body>
+</html>

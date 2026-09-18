@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · GlucoTrack</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">GlucoTrack</span>
+    </div>
+    <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
+      Menu
+    </button>
+    <ul class="nav-list" id="nav-list">
+      <li><a href="{% url 'home_page' %}" class="active">Dashboard</a></li>
+      <li><a href="{% url 'log' %}">Log a reading</a></li>
+      <li><a href="{% url 'medications' %}">Medications</a></li>
+      <li><a href="{% url 'hba1c' %}">HbA1c</a></li>
+      <li><a href="{% url 'guidance' %}">Guidance</a></li>
+      {% if request.user.is_anonymous %}
+      <li><a href="{% url 'login' %}">Login</a></li>
+      <li><a href="{% url 'register' %}">Join our family</a></li>
+      {% endif %}
+      {% if request.user.is_authenticated %}
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <main class="main">
+    <div class="main-inner">
+
+      <div class="page-head">
+        <h1>Good to see you</h1>
+        <p>Here's how your blood sugar has been tracking recently.</p>
+      </div>
+
+      <section class="card" aria-labelledby="tir-heading">
+        <div style="display:flex; gap:28px; flex-wrap:wrap; align-items:center;">
+          <div id="gauge-wrap" style="flex-shrink:0;"></div>
+          <div style="flex:1; min-width:220px;">
+            <h2 id="tir-heading" style="margin-bottom:4px;">Time in range</h2>
+            <p style="margin-bottom:10px;">Share of readings from the last 14 days that landed within your target range.</p>
+            <p id="tir-detail" style="margin:0; font-size:.88rem; color:var(--ink-faint);"></p>
+          </div>
+        </div>
+      </section>
+
+      <div class="stat-row">
+        <div class="stat">
+          <div class="label">Average glucose (30 days)</div>
+          <div class="value" id="stat-average">{{average_glucose_reading}}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Current HbA1c</div>
+          <div class="value" id="stat-a1c">{{hba1c.result}}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Last reading</div>
+          <div class="value" id="stat-last">{{reading.sugar}}</div>
+        </div>
+      </div>
+
+      <section class="card" style="margin-bottom:22px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h2 style="margin-bottom:0;">Glucose trend</h2>
+          <select id="range-select" style="width:auto;">
+            <option value="14">Last 14 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+        <canvas id="trend-chart" height="110"></canvas>
+        <p id="trend-empty" class="empty-state" style="display:none; margin-top:14px;">
+          <strong>No readings yet</strong>
+          Log your first blood sugar reading to see a trend here.
+        </p>
+      </section>
+
+      <section class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin-bottom:0;">Recent readings</h2>
+          <a href="{% url 'log' %}" class="btn secondary" style="border:none; padding:4px 0;">Log a reading</a>
+        </div>
+        <div class="entry-list" id="recent-list">
+        {% for data in recent_reading %}
+            <div class="entry-row" style="grid-template-columns:120px 100px 90px 1fr;">
+              <div>{{ data.date|date:"M j, Y" }}{% if data.time %} · {{ data.time }}{% endif %}</div>
+              <div>{{ data.taken_on }}</div>
+              <div class="val">{{ data.sugar }} <span class="unit">mg/dL</span></div>
+              <div class="notes">{{ data.notes }}</div>
+            </div>
+          {% empty %}
+            <p class="empty-state" style="margin-top:16px;">
+              <strong>No readings logged yet</strong>
+              Use the form above to log your first blood sugar reading — it'll show up here once saved.
+            </p>
+          {% endfor %}
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+  <script>
+    document.getElementById('menu-toggle')?.addEventListener('click', function () {
+      var list = document.getElementById('nav-list');
+      var open = list.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+    });
+  </script>
+
+  <script>
+    var glucoseData = [
+      {% for data in recent_reading %}
+      { date: "{{ data.date|date:'Y-m-d' }}", time: "{{ data.time|default:'' }}", value: {{ data.sugar|default_if_none:"null" }} }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ].filter(function(r){ return r.value !== null && r.value !== undefined && !isNaN(r.value) && r.date; });
+
+    console.log('GlucoTrack: raw reading count from server =', {{ recent_reading|length }});
+    console.log('GlucoTrack: glucoseData after parsing/filtering =', glucoseData);
+    console.log('GlucoTrack: Chart.js loaded =', typeof Chart !== 'undefined');
+
+    var trendChart;
+    function renderTrend(days){
+      try {
+        var cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+
+        var inWindow = glucoseData
+          .filter(function(r){ return new Date(r.date) >= cutoff; })
+          .sort(function(a, b){ return (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')); });
+
+        var canvas = document.getElementById('trend-chart');
+        var emptyMsg = document.getElementById('trend-empty');
+
+        if(inWindow.length === 0){
+          canvas.style.display = 'none';
+          emptyMsg.style.display = 'block';
+          return;
+        }
+        canvas.style.display = 'block';
+        emptyMsg.style.display = 'none';
+
+        var labels = inWindow.map(function(r){
+          var d = new Date(r.date + 'T00:00:00');
+          return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+        });
+        var values = inWindow.map(function(r){ return r.value; });
+
+        if(trendChart) trendChart.destroy();
+        trendChart = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              borderColor: '#1E8449',
+              backgroundColor: '#1E8449',
+              borderWidth: 2,
+              pointRadius: 4,
+              tension: 0.25,
+              fill: false
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { title: { display: true, text: 'mg/dL' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error('GlucoTrack: could not render trend chart', err);
+      }
+    }
+
+    document.getElementById('range-select').addEventListener('change', function(){
+      renderTrend(Number(this.value));
+    });
+    renderTrend(30);
+  </script>
+</body>
+</html>

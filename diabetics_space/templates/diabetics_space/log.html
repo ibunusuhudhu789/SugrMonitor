@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log a reading · GlucoTrack</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">GlucoTrack</span>
+    </div>
+    <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
+      Menu
+    </button>
+    <ul class="nav-list" id="nav-list">
+      <li><a href="{% url 'home_page' %}">Dashboard</a></li>
+      <li><a href="{% url 'log' %}" class="active">Log a reading</a></li>
+      <li><a href="{% url 'medications' %}">Medications</a></li>
+      <li><a href="{% url 'hba1c' %}">HbA1c</a></li>
+      <li><a href="{% url 'guidance' %}">Guidance</a></li>
+      {% if request.user.is_anonymous %}
+      <li><a href="{% url 'login' %}">Login</a></li>
+      <li><a href="{% url 'register' %}">Join our family</a></li>
+      {% endif %}
+      {% if request.user.is_authenticated %}
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <main class="main">
+    <div class="main-inner">
+
+      <div class="page-head">
+        <h1 id="form-heading">Log a reading</h1>
+        <p>Add a blood sugar reading as soon as you take it, so the trend on your dashboard stays accurate.</p>
+      </div>
+
+      <section class="card" style="margin-bottom:28px;">
+        <form id="reading-form" method="post">
+          <input type="hidden" id="reading-id">
+            {% csrf_token %}
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="field">
+              <label for="reading-date">Date</label>
+              <input type="date" name="date" id="reading-date" required>
+            </div>
+            <div class="field">
+              <label for="reading-time">Time</label>
+              <input type="time" name="time" id="reading-time">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>When was this taken?</label>
+            <div class="segmented" id="type-segmented">
+              <input type="radio" name="type" id="type-fasting" value="fasting" checked>
+              <label for="type-fasting">Fasting</label>
+              <input type="radio" name="type" id="type-random" value="random">
+              <label for="type-random">Random</label>
+              <input type="radio" name="type" id="type-postmeal" value="postmeal">
+              <label for="type-postmeal">After a meal</label>
+              <input type="radio" name="type" id="type-bedtime" value="bedtime">
+              <label for="type-bedtime">Bedtime</label>
+            </div>
+          </div>
+
+          <div class="field" style="max-width:220px;">
+            <label for="reading-value">Blood sugar</label>
+            <input type="number" id="reading-value" inputmode="numeric" min="20" max="700" placeholder="e.g. 108" name="sugar" required>
+            <div class="hint">in mg/dL</div>
+          </div>
+
+          <div class="field">
+            <label for="reading-notes">Notes (optional)</label>
+            <textarea id="reading-notes" name="notes" placeholder="Anything worth remembering — a meal, activity, how you felt"></textarea>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn" id="submit-btn">Save reading</button>
+            <button type="button" class="btn quiet" id="cancel-edit" style="display:none;">Cancel edit</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+          <h2 style="margin-bottom:0;">Your readings</h2>
+          <form method="get" style="margin:0;">
+            <select id="filter-type" name="type" style="width:auto;" onchange="this.form.submit()">
+              <option value="all" {% if not filter_type or filter_type == "all" %}selected{% endif %}>All types</option>
+              <option value="fasting" {% if filter_type == "fasting" %}selected{% endif %}>Fasting</option>
+              <option value="random" {% if filter_type == "random" %}selected{% endif %}>Random</option>
+              <option value="postmeal" {% if filter_type == "postmeal" %}selected{% endif %}>After a meal</option>
+              <option value="bedtime" {% if filter_type == "bedtime" %}selected{% endif %}>Bedtime</option>
+            </select>
+          </form>
+        </div>
+        <div class="entry-list" id="reading-list">
+          {% for data in reading %}
+            <div class="entry-row" style="grid-template-columns:120px 100px 90px 1fr;">
+              <div>{{ data.date|date:"M j, Y" }}{% if data.time %} · {{ data.time }}{% endif %}</div>
+              <div>{{ data.taken_on }}</div>
+              <div class="val">{{ data.sugar }} <span class="unit">mg/dL</span></div>
+              <div class="notes">{{ data.notes }}</div>
+            </div>
+          {% empty %}
+            <p class="empty-state" style="margin-top:16px;">
+              <strong>No readings logged yet</strong>
+              Use the form above to log your first blood sugar reading — it'll show up here once saved.
+            </p>
+          {% endfor %}
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+  <script>
+    document.getElementById('menu-toggle')?.addEventListener('click', function () {
+      var list = document.getElementById('nav-list');
+      var open = list.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+    });
+  </script>
+</body>
+</html>

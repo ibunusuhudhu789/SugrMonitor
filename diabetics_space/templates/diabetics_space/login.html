@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in · GlucoTrack</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<script src="{% static 'js/auth.js' %}" defer></script>
+</head>
+<body>
+
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">GlucoTrack</span>
+    </div>
+    <p class="auth-tagline">Your blood sugar, tracked and understood.</p>
+
+    <h1>Welcome back</h1>
+    <p class="auth-subhead">Log in to see your dashboard.</p>
+
+    {% if form.non_field_errors %}
+      <div class="form-error show">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <form id="login-form" method="post" action="{% url 'login' %}" novalidate>
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div class="field{% if field.errors %} has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+
+          {% if field.name == "username" %}
+            <p class="hint">The username you registered with.</p>
+          {% elif field.name == "password" %}
+            <p class="hint">Case-sensitive.</p>
+          {% endif %}
+
+          {% for error in field.errors %}
+            <p class="hint" style="color:var(--high);">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <div class="actions">
+        <button type="submit" class="btn">Log in</button>
+      </div>
+    </form>
+
+    <p class="auth-switch">New here? <a href="{% url 'register' %}">Create an account</a></p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily guidance · GlucoTrack</title>
+    {% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">GlucoTrack</span>
+    </div>
+    <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
+      Menu
+    </button>
+    <ul class="nav-list" id="nav-list">
+      <li><a href="{% url 'home_page' %}">Dashboard</a></li>
+      <li><a href="{% url 'log' %}">Log a reading</a></li>
+      <li><a href="{% url 'medications' %}">Medications</a></li>
+      <li><a href="{% url 'hba1c' %}">HbA1c</a></li>
+      <li><a href="{% url 'guidance' %}" class="active">Guidance</a></li>
+      {% if request.user.is_anonymous %}
+      <li><a href="{% url 'login' %}">Login</a></li>
+      <li><a href="{% url 'register' %}">Join our family</a></li>
+      {% endif %}
+      {% if request.user.is_authenticated %}
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <main class="main">
+    <div class="main-inner">
+
+      <div class="page-head">
+        <h1>Daily guidance</h1>
+        <p>General habits that support steady blood sugar, and what to do if a reading is unusually high or low. This isn't a substitute for advice from your doctor or diabetes educator.</p>
+      </div>
+
+      <div class="guide-section">
+        <h2>Everyday habits</h2>
+        <div class="guide-grid">
+          <div class="guide-card">
+            <h3>Meals</h3>
+            <p>Spacing carbohydrates evenly through the day, and pairing them with protein or fibre, tends to produce steadier readings than large single servings.</p>
+          </div>
+          <div class="guide-card">
+            <h3>Movement</h3>
+            <p>A short walk after eating — even ten minutes — measurably lowers the glucose spike that follows a meal.</p>
+          </div>
+          <div class="guide-card">
+            <h3>Sleep</h3>
+            <p>Poor or short sleep raises insulin resistance the next day. Consistent sleep and wake times help as much as total hours.</p>
+          </div>
+          <div class="guide-card">
+            <h3>Stress</h3>
+            <p>Stress hormones raise blood sugar independent of food. Brief breathing exercises or a change of scene can blunt this response.</p>
+          </div>
+          <div class="guide-card">
+            <h3>Hydration</h3>
+            <p>Dehydration concentrates glucose in the blood. Water is the safest choice — sugary drinks work against you here.</p>
+          </div>
+          <div class="guide-card">
+            <h3>Testing routine</h3>
+            <p>Testing at the same times each day — fasting, before and after meals — makes your trend line meaningful rather than noisy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <h2>If a reading is low (below 70 mg/dL)</h2>
+        <div class="callout warn" style="margin-bottom:14px;">
+          Common signs: shakiness, sweating, sudden hunger, dizziness, confusion, a fast heartbeat.
+        </div>
+        <p>Follow the 15–15 rule: take 15 grams of fast-acting carbohydrate — glucose tablets, fruit juice, or regular soda — wait 15 minutes, then re-check. Repeat if you're still below 70. Once you're back in range, eat a small snack with protein if your next meal is more than an hour away. Treat a severe episode (confusion, inability to swallow, loss of consciousness) as an emergency.</p>
+      </div>
+
+      <div class="guide-section">
+        <h2>If a reading is high</h2>
+        <div class="callout" style="margin-bottom:14px;">
+          Common signs: increased thirst, frequent urination, fatigue, blurred vision, headache.
+        </div>
+        <p>An occasional high reading after a large meal is usually not urgent — a walk and extra water can help, and your next fasting reading will show whether it settled. Readings that stay high for several checks in a row, or that come with nausea, vomiting, or breathing that feels laboured, need medical attention rather than home management — these can be signs of a more serious complication.</p>
+      </div>
+
+      <div class="guide-section">
+        <h2>When to call your doctor</h2>
+        <p>Bring your logged readings, HbA1c trend, and medication list to appointments — the dashboard and history pages here are built to be shown, not just kept. Contact your care team sooner if you notice a pattern of highs or lows at the same time of day, if a new medication seems to be affecting your numbers, or if you're unwell and unable to keep food or water down.</p>
+      </div>
+
+    </div>
+  </main>
+</div>
+  <script>
+    document.getElementById('menu-toggle')?.addEventListener('click', function () {
+      var list = document.getElementById('nav-list');
+      var open = list.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+    });
+  </script>
+</body>
+</html>

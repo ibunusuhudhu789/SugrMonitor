@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medications · GlucoTrack</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">GlucoTrack</span>
+    </div>
+    <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
+      Menu
+    </button>
+    <ul class="nav-list" id="nav-list">
+      <li><a href="{% url 'home_page' %}">Dashboard</a></li>
+      <li><a href="{% url 'log' %}">Log a reading</a></li>
+      <li><a href="{% url 'medications' %}" class="active">Medications</a></li>
+      <li><a href="{% url 'hba1c' %}">HbA1c</a></li>
+      <li><a href="{% url 'guidance' %}">Guidance</a></li>
+      {% if request.user.is_anonymous %}
+      <li><a href="{% url 'login' %}">Login</a></li>
+      <li><a href="{% url 'register' %}">Join our family</a></li>
+      {% endif %}
+      {% if request.user.is_authenticated %}
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <main class="main">
+    <div class="main-inner">
+
+      <div class="page-head">
+        <h1 id="med-heading">Medications</h1>
+        <p>Keep a record of what you take, the dose, and when — handy to have open at appointments.</p>
+      </div>
+
+      <section class="card" style="margin-bottom:28px;">
+        <form id="med-form" method="post">
+            {% csrf_token %}
+          <input type="hidden" id="med-id">
+          <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:16px;">
+            <div class="field">
+              <label for="med-name">Medication name</label>
+              <input type="text" id="med-name" name= 'medication' placeholder="e.g. Metformin" required>
+            </div>
+            <div class="field">
+              <label for="med-dosage">Dosage</label>
+              <input type="text" id="med-dosage" name= 'dosage' placeholder="e.g. 500 mg">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="field">
+              <label for="med-frequency">Frequency</label>
+              <select id="med-frequency" name="frequency">
+                <option>Once daily</option>
+                <option>Twice daily</option>
+                <option>Three times daily</option>
+                <option>As needed</option>
+                <option>Weekly</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="med-start">Started on</label>
+              <input type="date" id="med-start" name="dates">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="med-times">Times of day</label>
+            <input type="text" id="med-times" placeholder="e.g. 08:00, 20:00" name="times">
+            <div class="hint">Separate multiple times with commas</div>
+          </div>
+
+          <div class="field">
+            <label for="med-notes">Notes (optional)</label>
+            <textarea id="med-notes" placeholder="With food, prescribing doctor, anything worth remembering" name="notes"></textarea>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn" id="med-submit">Add medication</button>
+            <button type="button" class="btn quiet" id="med-cancel" style="display:none;">Cancel edit</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Your medications</h2>
+        {% if medications %}
+          <div class="entry-list" id="med-list">
+            {% for medication in medications %}
+              <div class="med-row">
+                <div>
+                  <h3>{{ medication.medication_name }}</h3>
+                  <div class="med-meta">
+                    {% if medication.dosage %}{{ medication.dosage }} · {% endif %}{{ medication.frequency }}{% if medication.dates %} · since {{ medication.dates|date:"M j, Y" }}{% endif %}
+                  </div>
+                  {% if medication.times_of_day %}
+                    <div class="med-times">
+                      <span class="pill">{{ medication.times_of_day }}</span>
+                    </div>
+                  {% endif %}
+                  {% if medication.notes %}
+                    <p style="margin-top:8px; font-size:.88rem;">{{ medication.notes }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty-state">
+            <strong>No medications added yet</strong>
+            Use the form above to add the first one.
+          </p>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+</div>
+  <script>
+    document.getElementById('menu-toggle')?.addEventListener('click', function () {
+      var list = document.getElementById('nav-list');
+      var open = list.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+    });
+  </script>
+</body>
+</html>
