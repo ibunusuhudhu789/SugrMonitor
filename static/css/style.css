@@ -1,5 +1,5 @@
 /* ===================================================================
-   GlucoTrack — design tokens
+   SugrMonitor — design tokens
    A calm, legible tool for logging blood glucose, not a marketing page.
 =================================================================== */
 
@@ -7,40 +7,39 @@
 
 :root{
   /* base */
-  --bg:            #F2F5F2;
+  --bg:            #F8FAF7;
   --surface:       #FFFFFF;
-  --surface-alt:   #E9EFE9;
-  --line:          #D8E1D9;
-  --ink:           #1E2B24;
-  --ink-soft:      #55655D;
-  --ink-faint:     #8A968F;
+  --surface-alt:   #DDF4EF;
+  --line:          #CFE8E2;
+  --ink:           #1E2933;
+  --ink-soft:      #46545C;
+  --ink-faint:     #8A98A0;
 
-  /* meaning-carrying colour: glucose status, used consistently everywhere */
-  --in-range:      #3C7A57;
-  --in-range-bg:   #E3EFE7;
-  --high:          #B05A28;
-  --high-bg:       #F4E4D8;
-  --low:           #3A5E8C;
-  --low-bg:        #E1E8F1;
+  /* meaning-carrying colour: glucose status, used consistently everywhere. */
+  --in-range:      #42A875;
+  --in-range-bg:   #E4F5EC;
+  --high:          #E76F61;
+  --high-bg:       #FBE7E4;
+  --low:           #5B8DEF;
+  --low-bg:        #E7EEFC;
 
-  /* brand accent (same hue family as "in range" — the product's whole
-     job is keeping you in that green) */
-  --accent:        #1E8449;
-  --accent-2:      #157A46;
+  /* brand accent — Emerald Teal / Deep Teal */
+  --accent:        #159A8C;
+  --accent-2:      #123C43;
   --accent-ink:    #FFFFFF;
+  --accent-bg:     #DDF4EF;
 
-  /* decorative-only accents — never used for glucose status meaning,
-     only for brand energy and category color-coding (stat cards, guide cards) */
-  --violet:        #6C4FA3;
-  --violet-bg:     #EDE7F5;
-  --amber:         #D9A441;
-  --amber-bg:      #F8EFDC;
-  --sky:           #3E7FB0;
-  --sky-bg:        #E3EDF4;
+  /* decorative-only accents — never used for glucose status meaning */
+  --violet:        #123C43;
+  --violet-bg:     #DCEEEC;
+  --amber:         #F2A93B;
+  --amber-bg:      #FCEEDA;
+  --sky:           #1F6F73;
+  --sky-bg:        #DEEEED;
 
   --radius-sm: 6px;
   --radius-md: 10px;
-  --shadow-1: 0 1px 2px rgba(30,43,36,0.06);
+  --shadow-1: 0 1px 2px rgba(30,41,51,0.06);
 
   --font-display: 'Newsreader', Georgia, serif;
   --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -101,17 +100,13 @@ button{ font-family: inherit; }
 
 .brand{
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
 }
 .brand-mark{
-  width: 11px; height: 11px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #6FCB93, var(--accent) 70%);
+  width: 22px; height: 22px;
   display: inline-block;
   flex-shrink: 0;
-  transform: translateY(-2px);
-  box-shadow: 0 0 0 3px var(--in-range-bg);
 }
 .brand-name{
   font-family: var(--font-display);
@@ -136,8 +131,8 @@ button{ font-family: inherit; }
 }
 .nav-list a:hover{ background: var(--surface-alt); color: var(--ink); }
 .nav-list a.active{
-  background: var(--in-range-bg);
-  color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent-2);
   font-weight: 600;
   box-shadow: inset 3px 0 0 var(--accent);
 }
@@ -156,7 +151,7 @@ button{ font-family: inherit; }
   padding: 36px 44px 80px;
   background:
     radial-gradient(circle at 100% 0%, var(--violet-bg), transparent 40%),
-    radial-gradient(circle at 0% 0%, var(--in-range-bg), transparent 45%);
+    radial-gradient(circle at 0% 0%, var(--accent-bg), transparent 45%);
   background-repeat: no-repeat;
 }
 
@@ -168,6 +163,17 @@ button{ font-family: inherit; }
   margin-bottom: 28px;
 }
 .page-head p{ margin: 0; }
+
+/* a header row that pairs a title with a control (a dropdown, a button) —
+   always wraps rather than squeezing on narrow screens, no breakpoint needed */
+.section-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
 
 /* mobile / tablet: collapse the sidebar to a top bar with a hamburger;
    clicking it opens the same nav-list as a dropdown panel */
@@ -194,7 +200,7 @@ button{ font-family: inherit; }
     border-bottom: 1px solid var(--line);
     padding: 8px 14px 16px;
     z-index: 25;
-    box-shadow: 0 8px 16px rgba(30,43,36,0.08);
+    box-shadow: 0 8px 16px rgba(30,41,51,0.08);
   }
   .nav-list.open{ display: flex; }
 
@@ -211,6 +217,17 @@ button{ font-family: inherit; }
   }
 
   .main{ padding: 26px 20px 60px; }
+}
+
+/* small phones — tighten spacing and type so nothing feels cramped */
+@media (max-width: 480px){
+  h1{ font-size: 1.6rem; }
+  h2{ font-size: 1.2rem; }
+  .main{ padding: 18px 14px 40px; }
+  .page-head{ margin-bottom: 20px; }
+  .card{ padding: 16px 18px; }
+  .stat .value{ font-size: 1.4rem; }
+  .auth-card{ padding: 26px 20px 24px; }
 }
 
 
@@ -303,6 +320,24 @@ input[type="date"], input[type="time"], input[type="number"], input[type="text"]
 }
 textarea{ resize: vertical; min-height: 70px; }
 
+/* two fields side by side in a form — used for name+dosage, frequency+start
+   date, etc. .lead widens the first column; both collapse to one column
+   on narrow screens so fields never get squeezed. */
+.form-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-row.lead{
+  grid-template-columns: 1.4fr 1fr;
+}
+@media (max-width: 640px){
+  .form-row,
+  .form-row.lead{
+    grid-template-columns: 1fr;
+  }
+}
+
 .segmented{
   display: flex;
   flex-wrap: wrap;
@@ -359,6 +394,7 @@ form .actions{
   display: flex;
   gap: 10px;
   margin-top: 4px;
+  flex-wrap: wrap;
 }
 
 /* tables / lists */
@@ -368,12 +404,16 @@ form .actions{
 }
 .entry-row{
   display: grid;
-  grid-template-columns: 108px 96px 84px 1fr auto;
+  grid-template-columns: 120px 100px 90px 1fr auto;
   gap: 14px;
   align-items: center;
   padding: 13px 0;
   border-bottom: 1px solid var(--line);
   font-size: .92rem;
+}
+/* narrower column set for HbA1c lab-history rows (date, value, notes, actions) */
+.entry-row.labs{
+  grid-template-columns: 110px 70px 1fr auto;
 }
 .entry-row .val{ font-family: var(--font-display); font-size: 1.15rem; }
 .entry-row .notes{ color: var(--ink-faint); font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -384,7 +424,11 @@ form .actions{
 }
 .entry-row .row-actions button:hover{ color: var(--ink); }
 @media (max-width: 640px){
-  .entry-row{ grid-template-columns: 1fr 1fr; row-gap: 4px; }
+  .entry-row,
+  .entry-row.labs{
+    grid-template-columns: 1fr 1fr;
+    row-gap: 4px;
+  }
   .entry-row .notes{ grid-column: 1 / -1; white-space: normal; }
   .entry-row .row-actions{ grid-column: 1 / -1; }
 }
@@ -411,6 +455,25 @@ form .actions{
 .med-row h3{ margin-bottom: 2px; }
 .med-meta{ font-size: .86rem; color: var(--ink-soft); }
 .med-times{ display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+/* small square icon buttons used for row-level actions (edit, delete) —
+   same border, size and hover state so every action button matches */
+.icon-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+}
+.icon-btn:hover{ background: var(--surface-alt); color: var(--ink); }
+.icon-btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
 .pill{
   font-size: .78rem;
   background: var(--surface-alt);
@@ -421,12 +484,10 @@ form .actions{
 
 /* two-column layout used on hba1c page */
 .split{
-  display: grid;
-  grid-template-columns: 1.1fr .9fr;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
-  align-items: start;
 }
-@media (max-width: 800px){ .split{ grid-template-columns: 1fr; } }
 
 /* guidance page */
 .guide-section{ margin-bottom: 30px; }
@@ -455,7 +516,7 @@ form .actions{
 
 .callout{
   border-left: 3px solid var(--accent);
-  background: var(--in-range-bg);
+  background: var(--accent-bg);
   padding: 14px 18px;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-size: .92rem;
@@ -472,7 +533,7 @@ form .actions{
   justify-content: center;
   padding: 40px 20px;
   background:
-    radial-gradient(circle at 15% 15%, var(--in-range-bg), transparent 50%),
+    radial-gradient(circle at 15% 15%, var(--accent-bg), transparent 50%),
     radial-gradient(circle at 90% 85%, var(--violet-bg), transparent 45%),
     var(--bg);
 }
@@ -484,12 +545,12 @@ form .actions{
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 34px 32px 30px;
-  box-shadow: 0 4px 18px rgba(30,43,36,0.06);
+  box-shadow: 0 4px 18px rgba(30,41,51,0.06);
 }
 
 .auth-brand{
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   justify-content: center;
   margin-bottom: 6px;
@@ -557,7 +618,7 @@ form .actions{
   bottom: 24px; left: 50%;
   transform: translateX(-50%) translateY(20px);
   background: var(--ink);
-  color: #fff;
+  color: #F8FAF7;
   padding: 10px 18px;
   border-radius: 100px;
   font-size: .88rem;

@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily guidance · GlucoTrack</title>
+<title>Daily guidance · SugrMonitor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z' fill='%23159A8C'/><rect x='8.6' y='13.4' width='6.8' height='2.1' rx='1.05' fill='%23fff'/><circle cx='12' cy='17.2' r='1' fill='%23fff'/></svg>">
     {% load static %}
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -12,8 +13,18 @@
 <div class="app-shell">
   <nav class="sidebar" aria-label="Main navigation">
     <div class="brand">
-      <span class="brand-mark"></span>
-      <span class="brand-name">GlucoTrack</span>
+      <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z" fill="url(#sm-drop)"/>
+        <rect x="8.6" y="13.4" width="6.8" height="2.1" rx="1.05" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="12" cy="17.2" r="1" fill="#FFFFFF" opacity="0.92"/>
+        <defs>
+          <linearGradient id="sm-drop" x1="5.5" y1="2.5" x2="18.5" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#8DE9D2"/>
+            <stop offset="1" stop-color="#159A8C"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-name">SugrMonitor</span>
     </div>
     <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
       Menu

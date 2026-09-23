@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Log a reading · GlucoTrack</title>
+<title>Log a reading · SugrMonitor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z' fill='%23159A8C'/><rect x='8.6' y='13.4' width='6.8' height='2.1' rx='1.05' fill='%23fff'/><circle cx='12' cy='17.2' r='1' fill='%23fff'/></svg>">
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -12,8 +13,18 @@
 <div class="app-shell">
   <nav class="sidebar" aria-label="Main navigation">
     <div class="brand">
-      <span class="brand-mark"></span>
-      <span class="brand-name">GlucoTrack</span>
+      <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z" fill="url(#sm-drop)"/>
+        <rect x="8.6" y="13.4" width="6.8" height="2.1" rx="1.05" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="12" cy="17.2" r="1" fill="#FFFFFF" opacity="0.92"/>
+        <defs>
+          <linearGradient id="sm-drop" x1="5.5" y1="2.5" x2="18.5" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#8DE9D2"/>
+            <stop offset="1" stop-color="#159A8C"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-name">SugrMonitor</span>
     </div>
     <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
       Menu
@@ -43,7 +54,7 @@
       </div>
 
       <section class="card" style="margin-bottom:28px;">
-        <form id="reading-form" method="post">
+        <form id="reading-form" method="post" novalidate onsubmit="return validateAndConfirm(this, 'Add this log?');">
           <input type="hidden" id="reading-id">
             {% csrf_token %}
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
@@ -104,12 +115,26 @@
         </div>
         <div class="entry-list" id="reading-list">
           {% for data in reading %}
-            <div class="entry-row" style="grid-template-columns:120px 100px 90px 1fr;">
-              <div>{{ data.date|date:"M j, Y" }}{% if data.time %} · {{ data.time }}{% endif %}</div>
-              <div>{{ data.taken_on }}</div>
-              <div class="val">{{ data.sugar }} <span class="unit">mg/dL</span></div>
-              <div class="notes">{{ data.notes }}</div>
-            </div>
+            <div class="entry-row">
+  <div>{{ data.date|date:"M j, Y" }}{% if data.time %} · {{ data.time }}{% endif %}</div>
+  <div>{{ data.taken_on }}</div>
+  <div class="val">{{ data.sugar }} <span class="unit">mg/dL</span></div>
+  <div class="notes">{{ data.notes }}</div>
+  <div class="row-actions">
+    <form method="post" action="{% url 'delete_log' id=data.id %}" onsubmit="return confirm('Delete this result?');" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" aria-label="Delete result" style="text-decoration:none; display:inline-flex; align-items:center;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+          <path d="M10 11v6"></path>
+          <path d="M14 11v6"></path>
+          <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+    </form>
+  </div>
+</div>
           {% empty %}
             <p class="empty-state" style="margin-top:16px;">
               <strong>No readings logged yet</strong>
@@ -127,6 +152,36 @@
       var list = document.getElementById('nav-list');
       var open = list.classList.toggle('open');
       this.setAttribute('aria-expanded', open);
+    });
+
+    // Mark empty required fields instead of relying on the browser's
+    // native validation bubble; clears itself once the person fills it in.
+    function validateAndConfirm(form, message){
+      var valid = true;
+      var firstInvalid = null;
+      form.querySelectorAll('[required]').forEach(function (el) {
+        var wrap = el.closest('.field');
+        var filled = el.value.trim() !== '';
+        if (!filled) {
+          valid = false;
+          if (wrap) wrap.classList.add('has-error');
+          if (!firstInvalid) firstInvalid = el;
+        } else if (wrap) {
+          wrap.classList.remove('has-error');
+        }
+      });
+      if (!valid) {
+        if (firstInvalid) firstInvalid.focus();
+        return false;
+      }
+      return confirm(message);
+    }
+
+    document.querySelectorAll('#reading-form [required]').forEach(function (el) {
+      el.addEventListener('input', function () {
+        var wrap = el.closest('.field');
+        if (wrap && el.value.trim() !== '') wrap.classList.remove('has-error');
+      });
     });
   </script>
 </body>

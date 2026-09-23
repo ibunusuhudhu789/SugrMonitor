@@ -12,10 +12,12 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 
+from django.conf.global_settings import AUTHENTICATION_BACKENDS
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+SITE_ID = 2
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
@@ -27,6 +29,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+LOGIN_REDIRECT_URL = 'home_page'
+
 
 # Application definition
 
@@ -37,7 +43,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'diabetics_space'
+    'django.contrib.sites',
+    'diabetics_space',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google'
 ]
 
 MIDDLEWARE = [
@@ -48,6 +59,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware'
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend'
 ]
 
 ROOT_URLCONF = 'core.urls'

@@ -3,19 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HbA1c · GlucoTrack</title>
+<title>HbA1c · SugrMonitor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z' fill='%23159A8C'/><rect x='8.6' y='13.4' width='6.8' height='2.1' rx='1.05' fill='%23fff'/><circle cx='12' cy='17.2' r='1' fill='%23fff'/></svg>">
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
-<script src="{% static 'js/store.js'  %}"></script>
-<script src="{%  static 'js/hba1c.js'  %}'"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
 <div class="app-shell">
   <nav class="sidebar" aria-label="Main navigation">
     <div class="brand">
-      <span class="brand-mark"></span>
-      <span class="brand-name">GlucoTrack</span>
+      <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z" fill="url(#sm-drop)"/>
+        <rect x="8.6" y="13.4" width="6.8" height="2.1" rx="1.05" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="12" cy="17.2" r="1" fill="#FFFFFF" opacity="0.92"/>
+        <defs>
+          <linearGradient id="sm-drop" x1="5.5" y1="2.5" x2="18.5" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#8DE9D2"/>
+            <stop offset="1" stop-color="#159A8C"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-name">SugrMonitor</span>
     </div>
     <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
       Menu
@@ -43,27 +53,29 @@
         <h1>HbA1c</h1>
         <p>HbA1c reflects your average blood sugar over the past two to three months. Keep your lab results here, and see an estimate calculated from your day-to-day readings in between tests.</p>
       </div>
-
       <div class="split">
+          {%if mode != 'update'%}
         <section class="card">
-          <h2>Estimated from your readings</h2>
-          <p style="margin-bottom:14px;">Calculated from the readings you've logged, using the standard relationship between average glucose and HbA1c. Treat this as a between-tests indicator, not a replacement for a lab result.</p>
-
-          <select id="est-range" style="width:auto; margin-bottom:16px;">
-            <option value="30">Last 30 days</option>
-            <option value="90" selected>Last 90 days</option>
-          </select>
+          <h2>Your current HbA1c reading</h2>
 
           <div style="display:flex; align-items:baseline; gap:10px;">
-            <div style="font-family:var(--font-display); font-size:3rem;" id="est-value">—</div>
-            <div style="color:var(--ink-faint);" id="est-caption"></div>
+            <div style="font-family:var(--font-display); font-size:3rem;" id="est-value">
+              {% if current_result %}{{ current_result }}<span class="unit">%</span>{% else %}—{% endif %}
+            </div>
+            {% if current_result %}
+              <div style="color:var(--ink-faint);" id="est-caption">latest result</div>
+            {% endif %}
           </div>
-          <p id="est-note" class="hint" style="margin-top:10px;"></p>
+          {% if not current_result %}
+            <p id="est-note" class="hint" style="margin-top:10px;">Add your first lab result to see your current reading here.</p>
+          {% endif %}
         </section>
+        {%endif%}
 
+       {%if mode == 'update'%}
         <section class="card">
           <h2>Add a lab result</h2>
-          <form id="a1c-form" method="post">
+          <form id="a1c-form" method="post" novalidate onsubmit="return validateForm(this);">
             {% csrf_token %}
             <div class="field">
               <label for="a1c-date">Test date</label>
@@ -71,22 +83,57 @@
             </div>
             <div class="field">
               <label for="a1c-value">HbA1c result</label>
-              <input type="number" id="a1c-value" name="result" step="0.1" min="3" max="20" placeholder="e.g. 6.8" required>
+              <input type="number" id="a1c-value" name="result" step="0.1" min="3" max="20" value="{{result}}" required>
               <div class="hint">as a percentage</div>
             </div>
             <div class="field">
               <label for="a1c-notes">Notes (optional)</label>
-              <textarea id="a1c-notes" name="notes" placeholder="Lab name, fasting status, anything else"></textarea>
+                <textarea id="a1c-notes" name="notes">{{notes}}</textarea>
             </div>
             <div class="actions">
-              <button type="submit" class="btn">Save result</button>
+              <button type="submit" class="btn">Update result</button>
             </div>
           </form>
         </section>
       </div>
+     {%endif%}
 
+    {%if mode != 'update'%}
+    <section class="card">
+      <h2>Add a lab result</h2>
+      <form id="a1c-form" method="post" novalidate onsubmit="return validateForm(this);">
+        {% csrf_token %}
+        <div class="field">
+          <label for="a1c-date">Test date</label>
+          <input type="date" id="a1c-date" name="date" required>
+        </div>
+        <div class="field">
+          <label for="a1c-value">HbA1c result</label>
+          <input type="number" id="a1c-value" name="result" step="0.1" min="3" max="20" placeholder="e.g. 6.8" required>
+          <div class="hint">as a percentage</div>
+        </div>
+        <div class="field">
+          <label for="a1c-notes">Notes (optional)</label>
+          <textarea id="a1c-notes" name="notes" placeholder="Lab name, fasting status, anything else"></textarea>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn">Save result</button>
+        </div>
+      </form>
+    </section>
+      </div>
+    {%endif%}
+
+      {%if mode != 'update'%}
       <section class="card" style="margin-top:22px;">
-        <h2>HbA1c over time</h2>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h2 style="margin-bottom:0;">HbA1c over time</h2>
+          <select id="range-select" style="width:auto;" onchange="window.location.href='?months=' + this.value;">
+            <option value="3" {% if months == 3 %}selected{% endif %}>Last 3 months</option>
+            <option value="6" {% if months == 6 %}selected{% endif %}>Last 6 months</option>
+            <option value="9" {% if months == 9 %}selected{% endif %}>Last 9 months</option>
+          </select>
+        </div>
         <canvas id="a1c-chart" height="90"></canvas>
         <p id="a1c-empty" class="empty-state" style="display:none; margin-top:14px;">
           <strong>No lab results yet</strong>
@@ -97,11 +144,31 @@
       <section class="card" style="margin-top:22px;">
         <h2>Lab history</h2>
         <div class="entry-list" id="a1c-list">
-          {% for result in hba1c %}
+          {% for result in all_results %}
             <div style="display:flex; justify-content:space-between; align-items:baseline; gap:14px; padding:13px 0; border-bottom:1px solid var(--line);">
               <div style="font-size:.92rem; color:var(--ink-soft); flex-shrink:0;">{{ result.test_date|date:"M j, Y" }}</div>
               <div class="val" style="flex-shrink:0;">{{ result.result }}<span class="unit">%</span></div>
               <div class="notes" style="flex:1; text-align:right;">{{ result.notes }}</div>
+              <div class="row-actions" style="flex-shrink:0; display:flex; gap:10px; align-items:center;">
+                <a href="{% url 'update_hba1c' id=result.id %}" aria-label="Edit result" class="icon-btn">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                  </svg>
+                </a>
+                <form method="post" action="{%url 'delete_hba1c' id=result.id%}" onsubmit="return confirm('Delete this result?');" style="margin:0;">
+                  {% csrf_token %}
+                  <button type="submit" aria-label="Delete result" class="icon-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                      <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </form>
+              </div>
             </div>
           {% empty %}
             <p class="empty-state" style="margin-top:14px;">
@@ -115,12 +182,102 @@
     </div>
   </main>
 </div>
+
+{%endif%}
   <script>
     document.getElementById('menu-toggle')?.addEventListener('click', function () {
       var list = document.getElementById('nav-list');
       var open = list.classList.toggle('open');
       this.setAttribute('aria-expanded', open);
     });
+
+    // Mark empty required fields instead of relying on the browser's
+    // native validation bubble; clears itself once the person fills it in.
+    function validateForm(form){
+      var valid = true;
+      var firstInvalid = null;
+      form.querySelectorAll('[required]').forEach(function (el) {
+        var wrap = el.closest('.field');
+        var filled = el.value.trim() !== '';
+        if (!filled) {
+          valid = false;
+          if (wrap) wrap.classList.add('has-error');
+          if (!firstInvalid) firstInvalid = el;
+        } else if (wrap) {
+          wrap.classList.remove('has-error');
+        }
+      });
+      if (!valid && firstInvalid) firstInvalid.focus();
+      return valid;
+    }
+
+    document.querySelectorAll('#a1c-form [required]').forEach(function (el) {
+      el.addEventListener('input', function () {
+        var wrap = el.closest('.field');
+        if (wrap && el.value.trim() !== '') wrap.classList.remove('has-error');
+      });
+    });
+  </script>
+
+  <script>
+    var a1cData = [
+      {% for result in hba1c %}
+      { date: "{{ result.test_date|date:'Y-m-d' }}", value: {{ result.result|default_if_none:"null" }} }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ].filter(function(r){ return r.value !== null && r.value !== undefined && !isNaN(r.value) && r.date; });
+
+    console.log('SugrMonitor: raw hba1c count from server =', {{ hba1c|length }});
+    console.log('SugrMonitor: a1cData after parsing/filtering =', a1cData);
+    console.log('SugrMonitor: Chart.js loaded =', typeof Chart !== 'undefined');
+
+    var a1cChart;
+    (function renderA1cTrend(){
+      try {
+        var sorted = a1cData.slice().sort(function(a, b){ return a.date.localeCompare(b.date); });
+
+        var canvas = document.getElementById('a1c-chart');
+        var emptyMsg = document.getElementById('a1c-empty');
+
+        if(sorted.length === 0){
+          canvas.style.display = 'none';
+          emptyMsg.style.display = 'block';
+          return;
+        }
+        canvas.style.display = 'block';
+        emptyMsg.style.display = 'none';
+
+        var labels = sorted.map(function(r){
+          var d = new Date(r.date + 'T00:00:00');
+          return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+        });
+        var values = sorted.map(function(r){ return r.value; });
+
+        if(a1cChart) a1cChart.destroy();
+        a1cChart = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              borderColor: '#159A8C',
+              backgroundColor: '#159A8C',
+              borderWidth: 2,
+              pointRadius: 4,
+              tension: 0.2,
+              fill: false
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { title: { display: true, text: 'HbA1c %' } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error('SugrMonitor: could not render a1c chart', err);
+      }
+    })();
   </script>
 </body>
 </html>

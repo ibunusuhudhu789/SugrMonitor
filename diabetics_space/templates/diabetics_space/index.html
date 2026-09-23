@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard · GlucoTrack</title>
+<title>Dashboard · SugrMonitor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z' fill='%23159A8C'/><rect x='8.6' y='13.4' width='6.8' height='2.1' rx='1.05' fill='%23fff'/><circle cx='12' cy='17.2' r='1' fill='%23fff'/></svg>">
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,8 +14,18 @@
 <div class="app-shell">
   <nav class="sidebar" aria-label="Main navigation">
     <div class="brand">
-      <span class="brand-mark"></span>
-      <span class="brand-name">GlucoTrack</span>
+      <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z" fill="url(#sm-drop)"/>
+        <rect x="8.6" y="13.4" width="6.8" height="2.1" rx="1.05" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="12" cy="17.2" r="1" fill="#FFFFFF" opacity="0.92"/>
+        <defs>
+          <linearGradient id="sm-drop" x1="5.5" y1="2.5" x2="18.5" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#8DE9D2"/>
+            <stop offset="1" stop-color="#159A8C"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-name">SugrMonitor</span>
     </div>
     <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
       Menu
@@ -48,7 +59,7 @@
           <div id="gauge-wrap" style="flex-shrink:0;"></div>
           <div style="flex:1; min-width:220px;">
             <h2 id="tir-heading" style="margin-bottom:4px;">Time in range</h2>
-            <p style="margin-bottom:10px;">Share of readings from the last 14 days that landed within your target range.</p>
+            <p style="margin-bottom:10px;">See how often your glucose stays within your target range.</p>
             <p id="tir-detail" style="margin:0; font-size:.88rem; color:var(--ink-faint);"></p>
           </div>
         </div>
@@ -70,12 +81,12 @@
       </div>
 
       <section class="card" style="margin-bottom:22px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div class="section-head">
           <h2 style="margin-bottom:0;">Glucose trend</h2>
-          <select id="range-select" style="width:auto;">
-            <option value="14">Last 14 days</option>
-            <option value="30" selected>Last 30 days</option>
-            <option value="90">Last 90 days</option>
+          <select id="range-select" style="width:auto;" onchange="window.location.href='?range=' + this.value;">
+            <option value="14" {% if range_days == 14 %}selected{% endif %}>Last 14 days</option>
+            <option value="30" {% if range_days == 30 %}selected{% endif %}>Last 30 days</option>
+            <option value="90" {% if range_days == 90 %}selected{% endif %}>Last 90 days</option>
           </select>
         </div>
         <canvas id="trend-chart" height="110"></canvas>
@@ -86,13 +97,13 @@
       </section>
 
       <section class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="section-head">
           <h2 style="margin-bottom:0;">Recent readings</h2>
           <a href="{% url 'log' %}" class="btn secondary" style="border:none; padding:4px 0;">Log a reading</a>
         </div>
         <div class="entry-list" id="recent-list">
         {% for data in recent_reading %}
-            <div class="entry-row" style="grid-template-columns:120px 100px 90px 1fr;">
+            <div class="entry-row">
               <div>{{ data.date|date:"M j, Y" }}{% if data.time %} · {{ data.time }}{% endif %}</div>
               <div>{{ data.taken_on }}</div>
               <div class="val">{{ data.sugar }} <span class="unit">mg/dL</span></div>
@@ -120,29 +131,26 @@
 
   <script>
     var glucoseData = [
-      {% for data in recent_reading %}
+      {% for data in graph_reading %}
       { date: "{{ data.date|date:'Y-m-d' }}", time: "{{ data.time|default:'' }}", value: {{ data.sugar|default_if_none:"null" }} }{% if not forloop.last %},{% endif %}
       {% endfor %}
     ].filter(function(r){ return r.value !== null && r.value !== undefined && !isNaN(r.value) && r.date; });
 
-    console.log('GlucoTrack: raw reading count from server =', {{ recent_reading|length }});
-    console.log('GlucoTrack: glucoseData after parsing/filtering =', glucoseData);
-    console.log('GlucoTrack: Chart.js loaded =', typeof Chart !== 'undefined');
+    console.log('SugrMonitor: raw graph reading count from server =', {{ graph_reading|length }});
+    console.log('SugrMonitor: glucoseData after parsing/filtering =', glucoseData);
+    console.log('SugrMonitor: Chart.js loaded =', typeof Chart !== 'undefined');
 
     var trendChart;
-    function renderTrend(days){
+    function renderTrend(){
       try {
-        var cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - days);
-
-        var inWindow = glucoseData
-          .filter(function(r){ return new Date(r.date) >= cutoff; })
+        var sorted = glucoseData
+          .slice()
           .sort(function(a, b){ return (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')); });
 
         var canvas = document.getElementById('trend-chart');
         var emptyMsg = document.getElementById('trend-empty');
 
-        if(inWindow.length === 0){
+        if(sorted.length === 0){
           canvas.style.display = 'none';
           emptyMsg.style.display = 'block';
           return;
@@ -150,11 +158,11 @@
         canvas.style.display = 'block';
         emptyMsg.style.display = 'none';
 
-        var labels = inWindow.map(function(r){
+        var labels = sorted.map(function(r){
           var d = new Date(r.date + 'T00:00:00');
           return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
         });
-        var values = inWindow.map(function(r){ return r.value; });
+        var values = sorted.map(function(r){ return r.value; });
 
         if(trendChart) trendChart.destroy();
         trendChart = new Chart(canvas.getContext('2d'), {
@@ -163,8 +171,8 @@
             labels: labels,
             datasets: [{
               data: values,
-              borderColor: '#1E8449',
-              backgroundColor: '#1E8449',
+              borderColor: '#159A8C',
+              backgroundColor: '#159A8C',
               borderWidth: 2,
               pointRadius: 4,
               tension: 0.25,
@@ -180,14 +188,11 @@
           }
         });
       } catch (err) {
-        console.error('GlucoTrack: could not render trend chart', err);
+        console.error('SugrMonitor: could not render trend chart', err);
       }
     }
 
-    document.getElementById('range-select').addEventListener('change', function(){
-      renderTrend(Number(this.value));
-    });
-    renderTrend(30);
+    renderTrend();
   </script>
 </body>
 </html>

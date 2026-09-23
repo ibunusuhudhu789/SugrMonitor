@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Medications · GlucoTrack</title>
+<title>Medications · SugrMonitor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z' fill='%23159A8C'/><rect x='8.6' y='13.4' width='6.8' height='2.1' rx='1.05' fill='%23fff'/><circle cx='12' cy='17.2' r='1' fill='%23fff'/></svg>">
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -12,8 +13,18 @@
 <div class="app-shell">
   <nav class="sidebar" aria-label="Main navigation">
     <div class="brand">
-      <span class="brand-mark"></span>
-      <span class="brand-name">GlucoTrack</span>
+      <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2.5C12 2.5 5.5 11.3 5.5 15.6C5.5 19.7 8.4 22 12 22C15.6 22 18.5 19.7 18.5 15.6C18.5 11.3 12 2.5 12 2.5Z" fill="url(#sm-drop)"/>
+        <rect x="8.6" y="13.4" width="6.8" height="2.1" rx="1.05" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="12" cy="17.2" r="1" fill="#FFFFFF" opacity="0.92"/>
+        <defs>
+          <linearGradient id="sm-drop" x1="5.5" y1="2.5" x2="18.5" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#8DE9D2"/>
+            <stop offset="1" stop-color="#159A8C"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-name">SugrMonitor</span>
     </div>
     <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-list">
       Menu
@@ -42,22 +53,22 @@
         <p>Keep a record of what you take, the dose, and when — handy to have open at appointments.</p>
       </div>
 
+      {%if mode == 'update'%}
       <section class="card" style="margin-bottom:28px;">
-        <form id="med-form" method="post">
+        <form id="med-form" method="post" novalidate onsubmit="return validateForm(this);">
             {% csrf_token %}
           <input type="hidden" id="med-id">
-          <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:16px;">
+          <div class="form-row lead">
             <div class="field">
               <label for="med-name">Medication name</label>
-              <input type="text" id="med-name" name= 'medication' placeholder="e.g. Metformin" required>
+              <input type="text" id="med-name" value="{{name}}" name= 'medication'  required>
             </div>
             <div class="field">
               <label for="med-dosage">Dosage</label>
-              <input type="text" id="med-dosage" name= 'dosage' placeholder="e.g. 500 mg">
+              <input type="text" id="med-dosage" name= 'dosage' value="{{dosage}}">
             </div>
           </div>
-
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-row">
             <div class="field">
               <label for="med-frequency">Frequency</label>
               <select id="med-frequency" name="frequency">
@@ -70,7 +81,55 @@
             </div>
             <div class="field">
               <label for="med-start">Started on</label>
-              <input type="date" id="med-start" name="dates">
+              <input type="date" id="med-start" name="dates" value="{{date}}" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="med-times">Times of day</label>
+            <input type="text" id="med-times" value="{{times}}" name="times">
+            <div class="hint">Separate multiple times with commas</div>
+          </div>
+          <div class="field">
+            <label for="med-notes">Notes (optional)</label>
+            <textarea id="med-notes" name="notes">{{notes}}</textarea>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn" id="med-submit">Update medication</button>
+            <button type="button" class="btn quiet" id="med-cancel" style="display:none;">Cancel edit</button>
+          </div>
+        </form>
+      </section>
+      {%endif%}
+        {%if mode != 'update'%}
+        <section class="card" style="margin-bottom:28px;">
+        <form id="med-form" method="post" novalidate onsubmit="return validateForm(this);">
+            {% csrf_token %}
+          <input type="hidden" id="med-id">
+          <div class="form-row lead">
+            <div class="field">
+              <label for="med-name">Medication name</label>
+              <input type="text" id="med-name" name= 'medication' placeholder="e.g. Metformin" required>
+            </div>
+            <div class="field">
+              <label for="med-dosage">Dosage</label>
+              <input type="text" id="med-dosage" name= 'dosage' placeholder="e.g. 500 mg">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="med-frequency">Frequency</label>
+              <select id="med-frequency" name="frequency">
+                <option>Once daily</option>
+                <option>Twice daily</option>
+                <option>Three times daily</option>
+                <option>As needed</option>
+                <option>Weekly</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="med-start">Started on</label>
+              <input type="date" id="med-start" name="dates" required>
             </div>
           </div>
 
@@ -86,12 +145,13 @@
           </div>
 
           <div class="actions">
-            <button type="submit" class="btn" id="med-submit">Add medication</button>
+            <button type="submit" class="btn" id="med-submit">Submit medication</button>
             <button type="button" class="btn quiet" id="med-cancel" style="display:none;">Cancel edit</button>
           </div>
         </form>
       </section>
-
+        {%endif%}
+    {%if mode != 'update'%}
       <section class="card">
         <h2>Your medications</h2>
         {% if medications %}
@@ -112,6 +172,28 @@
                     <p style="margin-top:8px; font-size:.88rem;">{{ medication.notes }}</p>
                   {% endif %}
                 </div>
+                <div class="row-actions" style="flex-shrink:0; display:flex; gap:10px; align-items:center;">
+                  <a href="{% url 'update_medications' id=medication.id %}"
+                     aria-label="Edit medication"
+                     class="icon-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                    </svg>
+                  </a>
+                  <form method="post" action="{% url 'delete_medications' id=medication.id %}" onsubmit="return confirm('Delete this medication?');" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" aria-label="Delete medication" class="icon-btn">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
               </div>
             {% endfor %}
           </div>
@@ -122,6 +204,7 @@
           </p>
         {% endif %}
       </section>
+      {%endif%}
     </div>
   </main>
 </div>
@@ -130,6 +213,33 @@
       var list = document.getElementById('nav-list');
       var open = list.classList.toggle('open');
       this.setAttribute('aria-expanded', open);
+    });
+
+    // Mark empty required fields instead of relying on the browser's
+    // native validation bubble; clears itself once the person fills it in.
+    function validateForm(form){
+      var valid = true;
+      var firstInvalid = null;
+      form.querySelectorAll('[required]').forEach(function (el) {
+        var wrap = el.closest('.field');
+        var filled = el.value.trim() !== '';
+        if (!filled) {
+          valid = false;
+          if (wrap) wrap.classList.add('has-error');
+          if (!firstInvalid) firstInvalid = el;
+        } else if (wrap) {
+          wrap.classList.remove('has-error');
+        }
+      });
+      if (!valid && firstInvalid) firstInvalid.focus();
+      return valid;
+    }
+
+    document.querySelectorAll('#med-form [required]').forEach(function (el) {
+      el.addEventListener('input', function () {
+        var wrap = el.closest('.field');
+        if (wrap && el.value.trim() !== '') wrap.classList.remove('has-error');
+      });
     });
   </script>
 </body>
