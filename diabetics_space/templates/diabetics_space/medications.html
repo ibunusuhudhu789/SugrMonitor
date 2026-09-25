@@ -44,6 +44,22 @@
       {% endif %}
     </ul>
   </nav>
+  {% if request.user.is_authenticated %}
+  <div class="user-status" aria-label="Signed in as {{ request.user.username }}">
+    <div class="user-avatar">{{ request.user.username|slice:":1"|upper }}</div>
+    <div class="user-name">{{ request.user.username }}</div>
+  </div>
+  {% else %}
+  <a href="{% url 'login' %}" class="user-status" aria-label="Not signed in - log in">
+    <div class="user-avatar guest">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+    <div class="user-name">Not signed in</div>
+  </a>
+  {% endif %}
 
   <main class="main">
     <div class="main-inner">

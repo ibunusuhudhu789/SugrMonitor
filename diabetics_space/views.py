@@ -5,6 +5,7 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from .models import Medications, Hba1c, Log
 from datetime import date, timedelta
 
+
 def home(request):
     if not request.user.is_authenticated:
         return render(request, 'diabetics_space/index.html')
@@ -16,7 +17,6 @@ def home(request):
         recent_readings = Log.objects.filter(user=request.user).order_by('-date', '-time')
     else:
         recent_readings = Log.objects.filter(user=request.user).order_by('-date', '-time')[:4]
-
 
     range_days = int(request.GET.get('range', 30))
     graph_cutoff = date.today() - timedelta(days=range_days)
@@ -47,13 +47,13 @@ def medications(request):
         times_of_day = request.POST.get('times')
         notes = request.POST.get('notes')
         Medications.objects.create(
-            medication_name = medication_name,
-            dosage = dosage,
-            frequency = frequency,
-            started_on = started_on,
-            times_of_day = times_of_day,
-            notes = notes,
-            user = request.user
+            medication_name=medication_name,
+            dosage=dosage,
+            frequency=frequency,
+            started_on=started_on,
+            times_of_day=times_of_day,
+            notes=notes,
+            user=request.user
         )
         return redirect(to='medications')
     all_medications = Medications.objects.filter(user=request.user)
@@ -68,15 +68,15 @@ def hba1c(request):
             result = request.POST.get('result')
             notes = request.POST.get('notes')
             Hba1c.objects.create(
-                test_date = test_date,
-                result = result,
-                notes = notes,
-                user = request.user
+                test_date=test_date,
+                result=result,
+                notes=notes,
+                user=request.user
             )
             return redirect(to='hba1c')
         all_results = Hba1c.objects.filter(user=request.user).order_by('-test_date')
         test_months = int(request.GET.get('months', 9))
-        start_date = date.today()- timedelta(days=(test_months*30))
+        start_date = date.today() - timedelta(days=(test_months * 30))
         readings = Hba1c.objects.filter(user=request.user, test_date__gte=start_date).order_by('-test_date')
         current_result = Hba1c.objects.filter(user=request.user).order_by('-test_date').first()
         if current_result:
@@ -85,11 +85,11 @@ def hba1c(request):
             result = None
 
         return render(request, 'diabetics_space/hba1c.html', {'hba1c': readings,
-                                                              'current_result':result,
-                                                              'months':test_months,
-                                                              'readings':readings,
-                                                              'all_results':all_results}
-    )
+                                                              'current_result': result,
+                                                              'months': test_months,
+                                                              'readings': readings,
+                                                              'all_results': all_results}
+                      )
     else:
         return render(request, 'diabetics_space/hba1c.html')
 
@@ -127,13 +127,14 @@ def log(request):
         'filter_type': filter_type,
     })
 
+
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-           user = form.save()
-           login(request, user)
-           return redirect(to='home_page')
+            user = form.save()
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return redirect(to='home_page')
     else:
         form = CustomUserCreationForm()
     return render(request, 'diabetics_space/register.html', {'form': form})
@@ -143,7 +144,7 @@ def login_user(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            login(request, form.get_user())
+            login(request, form.get_user(), backend='django.contrib.auth.backends.ModelBackend')
             return redirect(to='home_page')
     else:
         form = CustomAuthenticationForm()
@@ -198,9 +199,11 @@ def update_medications(request, id):
     started_on = selected_data.started_on
     times_of_day = selected_data.times_of_day
     notes = selected_data.notes
-    return render(request, 'diabetics_space/medications.html', {'name':medication_name,
-                                                                'dosage': dosage, 'frequency':frequency, 'started_on':started_on,
-                                                                'times':times_of_day, 'notes':notes, 'mode':'update'})
+    return render(request, 'diabetics_space/medications.html', {'name': medication_name,
+                                                                'dosage': dosage, 'frequency': frequency,
+                                                                'started_on': started_on,
+                                                                'times': times_of_day, 'notes': notes,
+                                                                'mode': 'update'})
 
 
 def update_hba1c(request, id):
@@ -209,9 +212,9 @@ def update_hba1c(request, id):
         test_date = request.POST.get('date')
         result = request.POST.get('result')
         notes = request.POST.get('notes')
-        selected_data.test_date=test_date
-        selected_data.result=result
-        selected_data.notes=notes
+        selected_data.test_date = test_date
+        selected_data.result = result
+        selected_data.notes = notes
         selected_data.save()
         return redirect(to='hba1c')
 
@@ -219,7 +222,36 @@ def update_hba1c(request, id):
     test_date = selected_data.test_date
     result = selected_data.result
     notes = selected_data.notes
-    return render(request, 'diabetics_space/hba1c.html', {'date':test_date,
-                                                          'result':result,
-                                                          'notes':notes,
-                                                          'mode':'update'})
+    return render(request, 'diabetics_space/hba1c.html', {'date': test_date,
+                                                          'result': result,
+                                                          'notes': notes,
+                                                          'mode': 'update'})
+
+
+def update_log(request, id):
+    if request.method == "POST":
+        date = request.POST.get('date')
+        time = request.POST.get('time')
+        sugar = request.POST.get('sugar')
+        taken_on = request.POST.get('type')
+        notes = request.POST.get('notes')
+        selected_data = Log.objects.get(id=id)
+        selected_data.date = date
+        selected_data.time = time
+        selected_data.sugar = sugar
+        selected_data.taken_on = taken_on
+        selected_data.notes = notes
+        selected_data.save()
+        return redirect(to='log')
+    selected_data = Log.objects.get(id=id)
+    date = selected_data.date
+    time = selected_data.time
+    sugar = selected_data.sugar
+    taken_on = selected_data.taken_on
+    notes = selected_data.notes
+    return render(request, 'diabetics_space/log.html', {'date': date,
+                                                        'time': time,
+                                                        'sugar': sugar,
+                                                        'taken_on': taken_on,
+                                                        'notes': notes,
+                                                        'mode': 'update'})
