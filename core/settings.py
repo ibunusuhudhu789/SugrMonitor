@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-)jzq#vwo(shws5n8=@2-50f@tzf&0yn*s*!+*h&sd)417fo635
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['sugrmonitor.onrender.com']
+ALLOWED_HOSTS = ['sugrmonitor.onrender.com', '127.0.0.1']
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
@@ -97,8 +97,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.parse(
-        os.getenv('DATABASE_URL')
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
 
