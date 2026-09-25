@@ -38,25 +38,28 @@ def home(request):
 
 
 def medications(request):
-    if request.method == 'POST':
-        medication_name = request.POST.get('medication')
-        dosage = request.POST.get('dosage')
-        frequency = request.POST.get('frequency')
-        started_on = request.POST.get('dates')
-        times_of_day = request.POST.get('times')
-        notes = request.POST.get('notes')
-        Medications.objects.create(
-            medication_name=medication_name,
-            dosage=dosage,
-            frequency=frequency,
-            started_on=started_on,
-            times_of_day=times_of_day,
-            notes=notes,
-            user=request.user
-        )
-        return redirect(to='medications')
-    all_medications = Medications.objects.filter(user=request.user)
-    return render(request, 'diabetics_space/medications.html', {'medications': all_medications})
+    if request.user.is_authenticated:
+        if request.method == 'POST':
+            medication_name = request.POST.get('medication')
+            dosage = request.POST.get('dosage')
+            frequency = request.POST.get('frequency')
+            started_on = request.POST.get('dates')
+            times_of_day = request.POST.get('times')
+            notes = request.POST.get('notes')
+            Medications.objects.create(
+                medication_name=medication_name,
+                dosage=dosage,
+                frequency=frequency,
+                started_on=started_on,
+                times_of_day=times_of_day,
+                notes=notes,
+                user=request.user
+            )
+            return redirect(to='medications')
+        all_medications = Medications.objects.filter(user=request.user)
+        return render(request, 'diabetics_space/medications.html', {'medications': all_medications})
+    else:
+        return render(request, 'diabetics_space/medications.html')
 
 
 def hba1c(request):
@@ -97,32 +100,35 @@ def guidance(request):
 
 
 def log(request):
-    if request.method == 'POST':
-        date = request.POST.get('date')
-        time = request.POST.get('time')
-        sugar = request.POST.get('sugar')
-        taken_on = request.POST.get('type')
-        notes = request.POST.get('notes')
-        Log.objects.create(
-            date=date,
-            time=time,
-            sugar=sugar,
-            taken_on=taken_on,
-            notes=notes,
-            user=request.user
-        )
-        return redirect(to='log')
+    if request.user.is_authenticated:
+        if request.method == 'POST':
+            date = request.POST.get('date')
+            time = request.POST.get('time')
+            sugar = request.POST.get('sugar')
+            taken_on = request.POST.get('type')
+            notes = request.POST.get('notes')
+            Log.objects.create(
+                date=date,
+                time=time,
+                sugar=sugar,
+                taken_on=taken_on,
+                notes=notes,
+                user=request.user
+            )
+            return redirect(to='log')
 
-    filter_type = request.GET.get('type', 'all')
-    log_reading = Log.objects.filter(user=request.user)
-    if filter_type != 'all':
-        log_reading = log_reading.filter(taken_on=filter_type)
-    log_reading = log_reading.order_by('-date', '-time')
+        filter_type = request.GET.get('type', 'all')
+        log_reading = Log.objects.filter(user=request.user)
+        if filter_type != 'all':
+            log_reading = log_reading.filter(taken_on=filter_type)
+        log_reading = log_reading.order_by('-date', '-time')
 
-    return render(request, 'diabetics_space/log.html', {
-        'reading': log_reading,
-        'filter_type': filter_type,
-    })
+        return render(request, 'diabetics_space/log.html', {
+            'reading': log_reading,
+            'filter_type': filter_type,
+        })
+    else:
+        return render(request, 'diabetics_space/log.html')
 
 
 def register(request):
