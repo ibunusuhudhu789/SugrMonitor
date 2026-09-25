@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-)jzq#vwo(shws5n8=@2-50f@tzf&0yn*s*!+*h&sd)417fo635
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['sugrmonitor.onrender.com']
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
