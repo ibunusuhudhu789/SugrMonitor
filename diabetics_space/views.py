@@ -37,7 +37,6 @@ def home(request):
     })
 
 
-@login_required()
 def medications(request):
     if request.method == 'POST':
         medication_name = request.POST.get('medication')
@@ -60,7 +59,6 @@ def medications(request):
     return render(request, 'diabetics_space/medications.html', {'medications': all_medications})
 
 
-@login_required()
 def hba1c(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
@@ -98,7 +96,6 @@ def guidance(request):
     return render(request, 'diabetics_space/guidance.html')
 
 
-@login_required()
 def log(request):
     if request.method == 'POST':
         date = request.POST.get('date')
